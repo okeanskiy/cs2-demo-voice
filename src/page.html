@@ -1,0 +1,65 @@
+<!doctype html>
+<!--
+APP_LICENSE
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; worker-src blob:; base-uri 'none'; form-action 'none'">
+  <title>CS2 Demo Voice</title>
+  <style>
+    /* STYLES */
+  </style>
+</head>
+<body>
+  <main>
+    <header class="intro">
+      <h1>CS2 Demo Voice</h1>
+      <p>Listen to a team or individual players when you replay a Counter-Strike 2 demo.</p>
+    </header>
+
+    <section id="drop-zone" class="drop-zone" aria-label="Load a demo">
+      <input id="file" type="file" accept=".dem,.zst" hidden>
+      <p class="drop-title">Drop a CS2 <code>.dem</code> file here</p>
+      <button id="choose" class="primary" type="button">Open demo</button>
+      <p class="local">Your demo stays on this device.</p>
+    </section>
+    <div class="file-feedback">
+      <p id="file-status" role="status"></p>
+      <progress id="progress" max="100" aria-label="Demo reading progress" hidden></progress>
+    </div>
+
+    <section id="results" hidden aria-labelledby="match-heading">
+      <header class="match">
+        <div>
+          <h2 id="match-heading">Match roster</h2>
+          <p id="match-detail"></p>
+        </div>
+        <button id="clear" type="button" disabled>Clear selection</button>
+      </header>
+      <div id="teams" class="teams"></div>
+      <p id="roster-note" class="note" hidden></p>
+
+      <section class="command-box" aria-labelledby="command-heading">
+        <h2 id="command-heading"><label for="command">CS2 console command</label></h2>
+        <div class="command-row">
+          <textarea id="command" readonly rows="2" spellcheck="false" placeholder="Select players to generate a command"></textarea>
+          <button id="copy" class="primary" type="button" disabled>Copy command</button>
+        </div>
+        <p id="copy-status" class="note" role="status"></p>
+        <p class="note">Paste the command into the CS2 developer console once the demo is loaded.</p>
+      </section>
+    </section>
+  </main>
+
+  <script id="demo-reader" type="text/plain">
+    /* PARSER */
+  </script>
+  <script>
+    "use strict";
+    /* VOICE_COMMAND */
+    /* UI */
+  </script>
+</body>
+</html>

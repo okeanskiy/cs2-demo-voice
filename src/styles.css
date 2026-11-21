@@ -1,0 +1,129 @@
+    :root {
+      color-scheme: dark;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      color: #e8eff7;
+      background: #101820;
+      --surface: #18232e;
+      --line: #354453;
+      --muted: #aebdcd;
+      --accent: #b9db6a;
+      --ct: #81caff;
+      --t: #ffc872;
+    }
+
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body { margin: 0; }
+    main { max-width: 61rem; margin: 0 auto; padding: 3.3rem 1.5rem 3rem; }
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: clamp(2.35rem, 5vw, 3.65rem); line-height: 1.04; letter-spacing: -.05em; }
+    h2 { font-size: 1.2rem; letter-spacing: -.016em; }
+    p { line-height: 1.55; }
+    .intro { margin-bottom: 1.8rem; }
+    .intro p { color: var(--muted); margin-top: .6rem; }
+    code, textarea { font-family: Consolas, "Cascadia Mono", monospace; }
+
+    button {
+      border: 1px solid #526176;
+      border-radius: .45rem;
+      padding: .55rem .8rem;
+      font: 600 .9rem/1.25 "Segoe UI", system-ui, sans-serif;
+      background: #253442;
+      color: #e8eff7;
+      cursor: pointer;
+    }
+    button:hover:not(:disabled) { background: #34475b; }
+    button.primary { background: var(--accent); color: #182010; border-color: transparent; }
+    button.primary:hover:not(:disabled) { background: #d0ee93; }
+    button:disabled { cursor: default; opacity: .5; }
+    button:focus-visible, textarea:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+    .drop-zone {
+      border: 1px dashed #667a8a;
+      background: var(--surface);
+      border-radius: .75rem;
+      display: grid;
+      justify-items: center;
+      text-align: center;
+      gap: .7rem;
+      padding: 1.55rem 1rem;
+    }
+    .drop-zone.active { background: #28382d; border-color: var(--accent); }
+    .drop-title { font-size: 1.12rem; font-weight: 650; }
+    .local, .note, #match-detail { font-size: .88rem; color: var(--muted); }
+    .file-feedback { margin: .6rem 0 1.3rem; }
+    #file-status { color: var(--muted); overflow-wrap: anywhere; }
+    #file-status.error { color: #ffc3a8; }
+    progress { display: block; width: 100%; height: .48rem; margin-top: .55rem; accent-color: var(--accent); }
+
+    .match, .team-head {
+      display: flex;
+      gap: .75rem;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .match { margin-bottom: .85rem; }
+    #match-detail { margin-top: .15rem; }
+    .teams { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .9rem; }
+    .team {
+      border-radius: .6rem;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      overflow: hidden;
+    }
+    .team-0 { grid-column: 1 / -1; }
+    .team-head { padding: .78rem .85rem; }
+    .team-head h3 { font-size: 1rem; }
+    .team-3 h3 { color: var(--ct); }
+    .team-2 h3 { color: var(--t); }
+    .players { list-style-type: none; margin: 0; padding: 0; }
+    .player {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: .6rem;
+      align-items: center;
+      padding: .53rem .85rem;
+      border-top: 1px solid var(--line);
+      cursor: pointer;
+    }
+    .player:hover { background: #223143; }
+    .player:has(input:checked) { background: #283b33; }
+    .player:has(input:disabled) { cursor: default; }
+    .player input { accent-color: var(--accent); width: 1rem; height: 1rem; margin: 0; }
+    .player-name { font-weight: 600; overflow-wrap: anywhere; }
+    .player-meta { color: var(--muted); font-size: .78rem; text-align: right; }
+    #roster-note { margin-top: .55rem; }
+
+    .command-box {
+      margin-top: 1rem;
+      padding: .95rem;
+      border: 1px solid var(--line);
+      border-radius: .65rem;
+      background: var(--surface);
+    }
+    .command-row { display: flex; align-items: center; gap: .75rem; margin: .6rem 0 .45rem; }
+    textarea {
+      min-width: 0;
+      flex: 1;
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #0f1720;
+      color: #eef9dd;
+      border-radius: .4rem;
+      font-size: .9rem;
+      padding: .55rem;
+      resize: vertical;
+    }
+    textarea:placeholder-shown { color: var(--muted); }
+    #copy { white-space: nowrap; }
+    #copy-status:not(:empty) { color: var(--accent); }
+
+    @media (max-width: 40rem) {
+      main { padding: 2rem .85rem 2rem; }
+      .teams { grid-template-columns: minmax(0, 1fr); }
+    }
+
+    @media (max-width: 31rem) {
+      .command-row { align-items: stretch; flex-direction: column; }
+      .command-row button { align-self: flex-start; }
+    }

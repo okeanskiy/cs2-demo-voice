@@ -1,0 +1,859 @@
+<!doctype html>
+<!--
+MIT License
+
+Copyright (c) 2026 CS2 Demo Voice contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; worker-src blob:; base-uri 'none'; form-action 'none'">
+  <title>CS2 Demo Voice</title>
+  <style>
+        :root {
+      color-scheme: dark;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      color: #e8eff7;
+      background: #101820;
+      --surface: #18232e;
+      --line: #354453;
+      --muted: #aebdcd;
+      --accent: #b9db6a;
+      --ct: #81caff;
+      --t: #ffc872;
+    }
+
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body { margin: 0; }
+    main { max-width: 61rem; margin: 0 auto; padding: 3.3rem 1.5rem 3rem; }
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: clamp(2.35rem, 5vw, 3.65rem); line-height: 1.04; letter-spacing: -.05em; }
+    h2 { font-size: 1.2rem; letter-spacing: -.016em; }
+    p { line-height: 1.55; }
+    .intro { margin-bottom: 1.8rem; }
+    .intro p { color: var(--muted); margin-top: .6rem; }
+    code, textarea { font-family: Consolas, "Cascadia Mono", monospace; }
+
+    button {
+      border: 1px solid #526176;
+      border-radius: .45rem;
+      padding: .55rem .8rem;
+      font: 600 .9rem/1.25 "Segoe UI", system-ui, sans-serif;
+      background: #253442;
+      color: #e8eff7;
+      cursor: pointer;
+    }
+    button:hover:not(:disabled) { background: #34475b; }
+    button.primary { background: var(--accent); color: #182010; border-color: transparent; }
+    button.primary:hover:not(:disabled) { background: #d0ee93; }
+    button:disabled { cursor: default; opacity: .5; }
+    button:focus-visible, textarea:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+    .drop-zone {
+      border: 1px dashed #667a8a;
+      background: var(--surface);
+      border-radius: .75rem;
+      display: grid;
+      justify-items: center;
+      text-align: center;
+      gap: .7rem;
+      padding: 1.55rem 1rem;
+    }
+    .drop-zone.active { background: #28382d; border-color: var(--accent); }
+    .drop-title { font-size: 1.12rem; font-weight: 650; }
+    .local, .note, #match-detail { font-size: .88rem; color: var(--muted); }
+    .file-feedback { margin: .6rem 0 1.3rem; }
+    #file-status { color: var(--muted); overflow-wrap: anywhere; }
+    #file-status.error { color: #ffc3a8; }
+    progress { display: block; width: 100%; height: .48rem; margin-top: .55rem; accent-color: var(--accent); }
+
+    .match, .team-head {
+      display: flex;
+      gap: .75rem;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .match { margin-bottom: .85rem; }
+    #match-detail { margin-top: .15rem; }
+    .teams { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .9rem; }
+    .team {
+      border-radius: .6rem;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      overflow: hidden;
+    }
+    .team-0 { grid-column: 1 / -1; }
+    .team-head { padding: .78rem .85rem; }
+    .team-head h3 { font-size: 1rem; }
+    .team-3 h3 { color: var(--ct); }
+    .team-2 h3 { color: var(--t); }
+    .players { list-style-type: none; margin: 0; padding: 0; }
+    .player {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: .6rem;
+      align-items: center;
+      padding: .53rem .85rem;
+      border-top: 1px solid var(--line);
+      cursor: pointer;
+    }
+    .player:hover { background: #223143; }
+    .player:has(input:checked) { background: #283b33; }
+    .player:has(input:disabled) { cursor: default; }
+    .player input { accent-color: var(--accent); width: 1rem; height: 1rem; margin: 0; }
+    .player-name { font-weight: 600; overflow-wrap: anywhere; }
+    .player-meta { color: var(--muted); font-size: .78rem; text-align: right; }
+    #roster-note { margin-top: .55rem; }
+
+    .command-box {
+      margin-top: 1rem;
+      padding: .95rem;
+      border: 1px solid var(--line);
+      border-radius: .65rem;
+      background: var(--surface);
+    }
+    .command-row { display: flex; align-items: center; gap: .75rem; margin: .6rem 0 .45rem; }
+    textarea {
+      min-width: 0;
+      flex: 1;
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #0f1720;
+      color: #eef9dd;
+      border-radius: .4rem;
+      font-size: .9rem;
+      padding: .55rem;
+      resize: vertical;
+    }
+    textarea:placeholder-shown { color: var(--muted); }
+    #copy { white-space: nowrap; }
+    #copy-status:not(:empty) { color: var(--accent); }
+
+    @media (max-width: 40rem) {
+      main { padding: 2rem .85rem 2rem; }
+      .teams { grid-template-columns: minmax(0, 1fr); }
+    }
+
+    @media (max-width: 31rem) {
+      .command-row { align-items: stretch; flex-direction: column; }
+      .command-row button { align-self: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="intro">
+      <h1>CS2 Demo Voice</h1>
+      <p>Listen to a team or individual players when you replay a Counter-Strike 2 demo.</p>
+    </header>
+
+    <section id="drop-zone" class="drop-zone" aria-label="Load a demo">
+      <input id="file" type="file" accept=".dem,.zst" hidden>
+      <p class="drop-title">Drop a CS2 <code>.dem</code> file here</p>
+      <button id="choose" class="primary" type="button">Open demo</button>
+      <p class="local">Your demo stays on this device.</p>
+    </section>
+    <div class="file-feedback">
+      <p id="file-status" role="status"></p>
+      <progress id="progress" max="100" aria-label="Demo reading progress" hidden></progress>
+    </div>
+
+    <section id="results" hidden aria-labelledby="match-heading">
+      <header class="match">
+        <div>
+          <h2 id="match-heading">Match roster</h2>
+          <p id="match-detail"></p>
+        </div>
+        <button id="clear" type="button" disabled>Clear selection</button>
+      </header>
+      <div id="teams" class="teams"></div>
+      <p id="roster-note" class="note" hidden></p>
+
+      <section class="command-box" aria-labelledby="command-heading">
+        <h2 id="command-heading"><label for="command">CS2 console command</label></h2>
+        <div class="command-row">
+          <textarea id="command" readonly rows="2" spellcheck="false" placeholder="Select players to generate a command"></textarea>
+          <button id="copy" class="primary" type="button" disabled>Copy command</button>
+        </div>
+        <p id="copy-status" class="note" role="status"></p>
+        <p class="note">Paste the command into the CS2 developer console once the demo is loaded.</p>
+      </section>
+    </section>
+  </main>
+
+  <script id="demo-reader" type="text/plain">
+    // Source 2 demo framing and the few messages needed to build a voice roster.
+const CHUNK_BYTES = 8 * 1024 * 1024;
+const MAX_FRAME_BYTES = 64 * 1024 * 1024;
+const DEMO = { stop: 0, header: 1, stringTables: 6, packet: 7, signon: 8, fullPacket: 13, compressed: 64 };
+const NET = { createTable: 44, updateTable: 45, voice: 47, clearTables: 51, eventList: 205, event: 207, endRoster: 375 };
+const PACKET_TYPES = new Set([DEMO.header, DEMO.stringTables, DEMO.packet, DEMO.signon, DEMO.fullPacket]);
+const UBITVAR_WIDTHS = [0, 4, 8, 28];
+const decoder = new TextDecoder();
+
+function invalidDemo() {
+  return new Error("The demo is incomplete or contains data this reader cannot decode.");
+}
+
+class Bytes {
+  constructor(data) {
+    this.data = data;
+    this.offset = 0;
+  }
+
+  byte() {
+    if (this.offset >= this.data.length) throw invalidDemo();
+    return this.data[this.offset++];
+  }
+
+  varint() {
+    let value = 0;
+    for (let shift = 0; shift <= 28; shift += 7) {
+      const byte = this.byte();
+      if (shift === 28 && byte > 15) throw invalidDemo();
+      value += (byte & 127) * 2 ** shift;
+      if (byte < 128) return value;
+    }
+    throw invalidDemo();
+  }
+
+  take(size) {
+    if (size > this.data.length - this.offset) throw invalidDemo();
+    const start = this.offset;
+    this.offset += size;
+    return this.data.subarray(start, this.offset);
+  }
+}
+
+class Bits {
+  constructor(data) {
+    this.data = data;
+    this.offset = 0;
+    this.length = data.length * 8;
+  }
+
+  read(count) {
+    if (this.offset + count > this.length) throw invalidDemo();
+    let value = 0;
+    for (let shift = 0; count > 0;) {
+      const bit = this.offset % 8;
+      const width = Math.min(8 - bit, count);
+      value |= ((this.data[this.offset >> 3] >> bit) & ((1 << width) - 1)) << shift;
+      this.offset += width;
+      count -= width;
+      shift += width;
+    }
+    return value >>> 0;
+  }
+
+  ubitvar() {
+    const first = this.read(6);
+    const extra = UBITVAR_WIDTHS[first >> 4];
+    return ((first & 15) | (this.read(extra) << 4)) >>> 0;
+  }
+
+  varint() {
+    let value = 0;
+    for (let shift = 0; shift <= 28; shift += 7) {
+      const byte = this.read(8);
+      if (shift === 28 && byte > 15) throw invalidDemo();
+      value += (byte & 127) * 2 ** shift;
+      if (byte < 128) return value;
+    }
+    throw invalidDemo();
+  }
+
+  bytes(count) {
+    if (count > this.length - this.offset) throw invalidDemo();
+    const result = new Uint8Array(Math.ceil(count / 8));
+    for (let index = 0; index < result.length; index++) {
+      result[index] = this.read(Math.min(count - index * 8, 8));
+    }
+    return result;
+  }
+
+  cstring() {
+    const result = [];
+    for (let byte = this.read(8); byte !== 0; byte = this.read(8)) {
+      if (result.length >= 4096) throw invalidDemo();
+      result.push(byte);
+    }
+    return result;
+  }
+}
+
+function snappy(data) {
+  const input = new Bytes(data);
+  const size = input.varint();
+  if (size > MAX_FRAME_BYTES) throw invalidDemo();
+  const result = new Uint8Array(size);
+  let out = 0;
+
+  while (input.offset < data.length) {
+    const tag = input.byte();
+    const kind = tag & 3;
+    if (kind === 0) {
+      let length = tag >> 2;
+      if (length >= 60) {
+        const width = length - 59;
+        length = 0;
+        for (let i = 0; i < width; i++) length += input.byte() * 2 ** (i * 8);
+      }
+      length++;
+      if (length > size - out) throw invalidDemo();
+      result.set(input.take(length), out);
+      out += length;
+      continue;
+    }
+
+    const length = kind === 1 ? 4 + ((tag >> 2) & 7) : 1 + (tag >> 2);
+    let distance = 0;
+    if (kind === 1) {
+      distance = ((tag & 224) << 3) + input.byte();
+    } else {
+      const width = kind === 2 ? 2 : 4;
+      for (let i = 0; i < width; i++) distance += input.byte() * 2 ** (i * 8);
+    }
+    if (!distance || distance > out || length > size - out) throw invalidDemo();
+    for (let i = 0; i < length; i++, out++) result[out] = result[out - distance];
+  }
+
+  if (out !== size) throw invalidDemo();
+  return result;
+}
+
+// Protobuf scalars retain their full width so Steam IDs can be compared exactly.
+function* fields(data) {
+  if (!data) return;
+  const input = new Bytes(data);
+  while (input.offset < data.length) {
+    const tag = input.varint();
+    const field = tag >>> 3;
+    if (!field) throw invalidDemo();
+    switch (tag & 7) {
+      case 0: {
+        let value = 0n;
+        for (let shift = 0n; ; shift += 7n) {
+          const byte = input.byte();
+          if (shift === 63n && byte > 1) throw invalidDemo();
+          value |= BigInt(byte & 127) << shift;
+          if (byte < 128) break;
+        }
+        yield [field, value];
+        break;
+      }
+      case 1:
+        yield [field, input.take(8)];
+        break;
+      case 2:
+        yield [field, input.take(input.varint())];
+        break;
+      case 5:
+        input.take(4);
+        break;
+      default:
+        throw invalidDemo();
+    }
+  }
+}
+
+const mapFields = data => new Map(fields(data));
+const text = data => data instanceof Uint8Array ? decoder.decode(data) : "";
+const integer = (data, fallback = 0) => typeof data === "bigint" ? Number(BigInt.asIntN(32, data)) : fallback;
+const idString = data => data instanceof Uint8Array && data.length === 8
+  ? new DataView(data.buffer, data.byteOffset, 8).getBigUint64(0, true).toString()
+  : typeof data === "bigint" ? data.toString() : "0";
+
+function eachMessage(data, field) {
+  return [...fields(data)].filter(([key]) => key === field).map(([, value]) => value);
+}
+
+function playable(side) {
+  return side === 2 || side === 3;
+}
+
+function voiceSlot(slot) {
+  return slot >= 0 && slot < 64;
+}
+
+function playerInfo(data, slot) {
+  if (!data?.length || !voiceSlot(slot)) return;
+  const info = mapFields(data);
+  const name = text(info.get(1));
+  const steamId = idString(info.get(4) ?? info.get(2));
+  if (!name || steamId === "0" || integer(info.get(5)) || integer(info.get(6))) return;
+  return { slot, name, steamId, userId: integer(info.get(3), -1) & 65535 };
+}
+
+function readTableUpdate(data, count, table, update) {
+  if (count < 0 || count > 4096) throw invalidDemo();
+  const bits = new Bits(data);
+  const history = [];
+  let index = -1;
+  for (let i = 0; i < count; i++) {
+    index += bits.read(1) ? 1 : 2 + bits.varint();
+    let key = table.keys.get(index) ?? [];
+    if (bits.read(1)) {
+      if (bits.read(1)) {
+        const position = bits.read(5);
+        const length = bits.read(5);
+        key = (history[Math.max(0, i - 32) + position] ?? []).slice(0, length).concat(bits.cstring());
+      } else {
+        key = bits.cstring();
+      }
+      table.keys.set(index, key);
+    }
+    history.push(key);
+
+    if (bits.read(1)) {
+      const compressed = !table.fixedSize && (table.flags & 1) && bits.read(1);
+      const length = table.fixedSize ? table.sizeBits : 8 * (table.varint ? bits.ubitvar() : bits.read(17));
+      const bytes = bits.bytes(length);
+      update(compressed ? snappy(bytes) : bytes, index);
+    }
+  }
+}
+
+function createRosterReader() {
+  let map = "";
+  let isCs2 = false;
+  let tableCount = 0;
+  let userTable;
+  let playersAtEnd = [];
+  let voicePackets = 0;
+  const seenPlayers = new Map();
+  const teamsByUserId = new Map();
+  const descriptors = new Map();
+  const playersBySlot = new Map();
+  const voicesBySlot = new Map();
+
+  function rememberPlayer(data, slot) {
+    const player = playerInfo(data, slot);
+    if (!player) return;
+    const last = seenPlayers.get(slot);
+    if (!last || last.userId !== player.userId || last.name !== player.name) {
+      seenPlayers.set(slot, player);
+    }
+    const ids = playersBySlot.get(slot) ?? new Set();
+    ids.add(player.steamId);
+    playersBySlot.set(slot, ids);
+  }
+
+  function readTables(data) {
+    for (const entry of eachMessage(data, 1)) {
+      const table = mapFields(entry);
+      if (text(table.get(1)) !== "userinfo") continue;
+      const items = eachMessage(entry, 2);
+      items.forEach((item, slot) => rememberPlayer(mapFields(item).get(2), slot));
+    }
+  }
+
+  function readMessage(type, data) {
+    switch (type) {
+      case NET.createTable: {
+        const table = mapFields(data);
+        const id = tableCount++;
+        if (text(table.get(1)) !== "userinfo") break;
+        userTable = {
+          id, fixedSize: integer(table.get(3)), sizeBits: integer(table.get(5)),
+          flags: integer(table.get(6)), varint: integer(table.get(10)), keys: new Map()
+        };
+        const bytes = table.get(7) ?? new Uint8Array();
+        readTableUpdate(integer(table.get(9)) ? snappy(bytes) : bytes, integer(table.get(2)), userTable, rememberPlayer);
+        break;
+      }
+      case NET.updateTable: {
+        if (!userTable) break;
+        const table = mapFields(data);
+        if (integer(table.get(1)) !== userTable.id) break;
+        readTableUpdate(table.get(3) ?? new Uint8Array(), integer(table.get(2)), userTable, rememberPlayer);
+        break;
+      }
+      case NET.clearTables:
+        tableCount = 0;
+        userTable = undefined;
+        break;
+      case NET.eventList:
+        for (const descriptor of eachMessage(data, 1)) {
+          const event = mapFields(descriptor);
+          if (text(event.get(2)) !== "player_team") continue;
+          const keys = eachMessage(descriptor, 3).map(key => text(mapFields(key).get(2)));
+          descriptors.set(integer(event.get(1)), { user: keys.indexOf("userid"), team: keys.indexOf("team") });
+        }
+        break;
+      case NET.event: {
+        const event = mapFields(data);
+        const names = descriptors.get(integer(event.get(2)));
+        if (!names) break;
+        const keys = eachMessage(data, 3);
+        const id = integer(mapFields(keys[names.user]).get(5), -1) & 65535;
+        const team = integer(mapFields(keys[names.team]).get(6));
+        if (id !== 65535 && playable(team)) teamsByUserId.set(id, team);
+        break;
+      }
+      case NET.endRoster: {
+        const roster = eachMessage(data, 1).map(entry => {
+          const player = mapFields(entry);
+          return {
+            slot: integer(player.get(1), -1), name: text(player.get(3)), side: integer(player.get(4)),
+            steamId: idString(player.get(2)), bot: integer(player.get(8))
+          };
+        }).filter(player => voiceSlot(player.slot) && playable(player.side) && player.name && !player.bot);
+        if (roster.length) playersAtEnd = roster;
+        break;
+      }
+      case NET.voice: {
+        const voice = mapFields(data);
+        if (integer(voice.get(9)) || !mapFields(voice.get(1)).get(2)?.length) break;
+        const entity = integer(voice.get(8), -1);
+        const slot = entity > 0 ? entity - 1 : integer(voice.get(2), -1);
+        if (!voiceSlot(slot)) break;
+        voicePackets++;
+        voicesBySlot.set(slot, (voicesBySlot.get(slot) ?? 0) + 1);
+        break;
+      }
+    }
+  }
+
+  function readPacket(data) {
+    const packet = mapFields(data).get(3);
+    if (!packet) return;
+    const bits = new Bits(packet);
+    while (bits.length - bits.offset >= 14) {
+      const type = bits.ubitvar();
+      const size = bits.varint() * 8;
+      if (size > bits.length - bits.offset) throw invalidDemo();
+      switch (type) {
+        case NET.createTable: case NET.updateTable: case NET.clearTables: case NET.eventList:
+        case NET.event: case NET.endRoster: case NET.voice:
+          readMessage(type, bits.bytes(size));
+          break;
+        default:
+          bits.offset += size;
+      }
+    }
+  }
+
+  return {
+    read(type, data) {
+      switch (type) {
+        case DEMO.header: {
+          const header = mapFields(data);
+          map = text(header.get(5));
+          isCs2 = /(?:^|[/\\])csgo[/\\]?$/i.test(text(header.get(6))) || text(header.get(14)).toLowerCase() === "cs2";
+          if (!isCs2) throw new Error("Choose a Counter-Strike 2 .dem file.");
+          break;
+        }
+        case DEMO.stringTables:
+          readTables(data);
+          break;
+        case DEMO.fullPacket: {
+          const packet = mapFields(data);
+          readTables(packet.get(1));
+          readPacket(packet.get(2));
+          break;
+        }
+        case DEMO.packet: case DEMO.signon:
+          readPacket(data);
+          break;
+      }
+    },
+
+    result() {
+      if (!isCs2) throw new Error("The file is missing a Counter-Strike 2 demo header.");
+      const roster = new Map(playersAtEnd.map(player => [player.slot, player]));
+      for (const player of seenPlayers.values()) {
+        const side = teamsByUserId.get(player.userId);
+        if (!roster.has(player.slot) && (side || voicesBySlot.has(player.slot))) {
+          roster.set(player.slot, { ...player, side: side ?? 0 });
+        }
+      }
+      for (const slot of voicesBySlot.keys()) {
+        if (!roster.has(slot)) roster.set(slot, { slot, name: "Player " + (slot + 1), side: 0 });
+      }
+
+      const players = [...roster.values()].sort((a, b) => a.slot - b.slot).map(player => ({
+        slot: player.slot, name: player.name, side: player.side,
+        spoke: voicesBySlot.has(player.slot), slotReused: (playersBySlot.get(player.slot)?.size ?? 0) > 1
+      }));
+      if (!players.length) throw new Error("No player roster or voice chat could be found in this demo.");
+      return { map, players, voicePackets };
+    }
+  };
+}
+
+async function parseDemo(file, onProgress = () => {}) {
+  const magic = new Uint8Array(await file.slice(0, 8).arrayBuffer());
+  if (magic[0] === 0x28 && magic[1] === 0xb5 && magic[2] === 0x2f && magic[3] === 0xfd) {
+    throw new Error("Extract the .dem from the FACEIT .zst archive first, then open the .dem.");
+  }
+  if (text(magic) !== "PBDEMS2\0" || file.size < 16) {
+    throw new Error("Choose a Counter-Strike 2 .dem file.");
+  }
+
+  const reader = createRosterReader();
+  let offset = 16;
+  while (offset < file.size) {
+    const chunkStart = offset;
+    const chunk = new Uint8Array(await file.slice(offset, offset + CHUNK_BYTES).arrayBuffer());
+    const input = new Bytes(chunk);
+    while (input.offset < chunk.length) {
+      // A maximum of three five-byte varints make up a frame header.
+      if (chunk.length - input.offset < 15 && offset + chunk.length < file.size) break;
+      const command = input.varint();
+      const type = command & ~DEMO.compressed;
+      input.varint(); // Demo tick
+      const size = input.varint();
+      if (type === DEMO.stop) return reader.result();
+      const start = offset + input.offset;
+      const end = start + size;
+      if (end > file.size || size > MAX_FRAME_BYTES) throw invalidDemo();
+      if (PACKET_TYPES.has(type)) {
+        const data = end <= offset + chunk.length
+          ? chunk.subarray(input.offset, input.offset + size)
+          : new Uint8Array(await file.slice(start, end).arrayBuffer());
+        reader.read(type, command & DEMO.compressed ? snappy(data) : data);
+      }
+
+      if (end > offset + chunk.length) {
+        offset = end;
+        break;
+      }
+      input.offset += size;
+    }
+    if (offset === chunkStart) offset += input.offset;
+    onProgress(offset / file.size);
+  }
+  return reader.result();
+}
+  </script>
+  <script>
+    "use strict";
+    function voiceCommand(slots) {
+  let low = 0;
+  let high = 0;
+  for (const slot of slots) {
+    if (!Number.isInteger(slot) || slot < 0 || slot >= 64) throw new RangeError("Invalid voice slot.");
+    if (slot < 32) low |= 1 << slot;
+    else high |= 1 << (slot - 32);
+  }
+  return "tv_listen_voice_indices " + low + "; tv_listen_voice_indices_h " + high;
+}
+    const byId = id => document.getElementById(id);
+const fileInput = byId("file");
+const dropZone = byId("drop-zone");
+const fileStatus = byId("file-status");
+const progress = byId("progress");
+const results = byId("results");
+const clearButton = byId("clear");
+const copyButton = byId("copy");
+const command = byId("command");
+const copyStatus = byId("copy-status");
+const selected = new Set();
+const teams = [];
+let currentWorker;
+
+function renderSelection() {
+  for (const team of teams) {
+    const all = team.players.every(player => selected.has(player.slot));
+    for (const player of team.players) player.input.checked = selected.has(player.slot);
+    team.button.textContent = all ? "Clear team" : "Select team";
+    team.button.setAttribute("aria-label", team.button.textContent + " " + team.label);
+  }
+
+  command.value = selected.size ? voiceCommand(selected) : "";
+  copyButton.disabled = clearButton.disabled = selected.size === 0;
+  copyStatus.textContent = "";
+}
+
+function createElement(tag, className, label) {
+  const element = document.createElement(tag);
+  if (className) element.className = className;
+  if (label) element.textContent = label;
+  return element;
+}
+
+function makeTeam(label, side, players, hasVoice) {
+  const section = createElement("section", "team team-" + side);
+  const heading = createElement("h3", "", label);
+  heading.id = "team-heading-" + side;
+  section.setAttribute("aria-labelledby", heading.id);
+  const header = createElement("div", "team-head");
+  const button = createElement("button", "", "Select team");
+  button.type = "button";
+  button.disabled = !hasVoice;
+  header.append(heading, button);
+
+  const list = createElement("ul", "players");
+  const rows = [];
+  for (const player of players) {
+    const item = createElement("li");
+    const row = createElement("label", "player");
+    const input = createElement("input");
+    input.type = "checkbox";
+    input.disabled = !hasVoice;
+    input.addEventListener("change", () => {
+      if (input.checked) selected.add(player.slot);
+      else selected.delete(player.slot);
+      renderSelection();
+    });
+    const name = createElement("span", "player-name", player.name);
+    const details = "Spec " + (player.slot + 1) + (hasVoice && !player.spoke ? " · No voice" : "");
+    const meta = createElement("span", "player-meta", details);
+    row.append(input, name, meta);
+    item.append(row);
+    list.append(item);
+    rows.push({ slot: player.slot, input });
+  }
+
+  button.addEventListener("click", () => {
+    const all = rows.every(player => selected.has(player.slot));
+    for (const player of rows) {
+      if (all) selected.delete(player.slot);
+      else selected.add(player.slot);
+    }
+    renderSelection();
+  });
+  teams.push({ label, button, players: rows });
+  section.append(header, list);
+  return section;
+}
+
+function showRoster(data, fileName) {
+  fileStatus.textContent = fileName;
+  byId("match-heading").textContent = data.map || "Match roster";
+  const count = data.players.length;
+  byId("match-detail").textContent = count + (count === 1 ? " player" : " players") + " · Team sides near the end of the demo";
+  const notes = [];
+  if (!data.voicePackets) notes.push("No recorded voice chat found in this demo.");
+  if (data.players.some(player => player.side === 0)) notes.push("Players with an unknown team can still be selected by slot.");
+  if (data.players.some(player => player.slotReused)) notes.push("Some slots were reused. CS2 plays every voice recorded in a selected slot.");
+  byId("roster-note").textContent = notes.join(" ");
+  byId("roster-note").hidden = !notes.length;
+
+  const groups = [[3, "Counter-Terrorists"], [2, "Terrorists"], [0, "Team unknown"]];
+  byId("teams").replaceChildren();
+  for (const [side, label] of groups) {
+    const players = data.players.filter(player => player.side === side);
+    if (players.length) byId("teams").append(makeTeam(label, side, players, data.voicePackets > 0));
+  }
+  results.hidden = false;
+  renderSelection();
+}
+
+function showError(message) {
+  fileStatus.textContent = message;
+  fileStatus.classList.add("error");
+  progress.hidden = true;
+}
+
+function loadDemo(file) {
+  if (currentWorker) currentWorker.terminate();
+  currentWorker = null;
+  teams.length = 0;
+  selected.clear();
+  results.hidden = true;
+  fileStatus.classList.remove("error");
+  fileStatus.textContent = "Reading " + file.name + "…";
+  progress.value = 0;
+  progress.hidden = false;
+
+  const workerCode = byId("demo-reader").textContent + "\n" +
+    "self.onmessage = async ({ data }) => {\n" +
+    "  try {\n" +
+    "    const result = await parseDemo(data, progress => self.postMessage({ progress }));\n" +
+    "    self.postMessage({ result });\n" +
+    "  } catch (err) { self.postMessage({ error: err.message || String(err) }); }\n" +
+    "};";
+  const url = URL.createObjectURL(new Blob([workerCode], { type: "text/javascript" }));
+  try {
+    const worker = new Worker(url);
+    currentWorker = worker;
+    worker.onmessage = ({ data }) => {
+      if (currentWorker !== worker) return;
+      if (typeof data.progress === "number") {
+        progress.value = data.progress * 100;
+        return;
+      }
+      worker.terminate();
+      currentWorker = null;
+      progress.hidden = true;
+      if (data.error) showError(data.error);
+      else showRoster(data.result, file.name);
+    };
+    worker.onerror = () => {
+      if (currentWorker !== worker) return;
+      worker.terminate();
+      currentWorker = null;
+      showError("The browser could not start the demo reader. Try opening this file in a current browser.");
+    };
+    worker.postMessage(file);
+  } catch {
+    showError("The browser could not start the demo reader. Try opening this file in a current browser.");
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+byId("choose").addEventListener("click", () => fileInput.click());
+fileInput.addEventListener("change", () => {
+  const file = fileInput.files[0];
+  fileInput.value = "";
+  if (file) loadDemo(file);
+});
+
+window.addEventListener("dragover", event => {
+  if (!Array.from(event.dataTransfer.types).includes("Files")) return;
+  event.preventDefault();
+  event.dataTransfer.dropEffect = "copy";
+  dropZone.classList.add("active");
+});
+
+window.addEventListener("dragleave", event => {
+  if (!event.relatedTarget) dropZone.classList.remove("active");
+});
+
+window.addEventListener("drop", event => {
+  event.preventDefault();
+  dropZone.classList.remove("active");
+  if (event.dataTransfer.files.length === 1) loadDemo(event.dataTransfer.files[0]);
+  else if (event.dataTransfer.files.length > 1 && !currentWorker) showError("Open one demo at a time.");
+});
+
+clearButton.addEventListener("click", () => {
+  selected.clear();
+  renderSelection();
+});
+
+copyButton.addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(command.value);
+    copyStatus.textContent = "Copied.";
+  } catch {
+    command.select();
+    copyStatus.textContent = document.execCommand("copy") ? "Copied." : "Press Ctrl+C or ⌘C to copy the selected command.";
+  }
+});
+  </script>
+</body>
+</html>
